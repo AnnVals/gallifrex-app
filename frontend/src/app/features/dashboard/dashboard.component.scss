@@ -1,0 +1,290 @@
+.page {
+  padding: 30px;
+}
+
+.header-actions {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.month-nav {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+}
+
+.month-label {
+  cursor: default;
+}
+
+.kpi-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 18px;
+  margin-bottom: 22px;
+}
+
+.kpi-card {
+  padding: 22px;
+  animation: fadeInUp 0.45s ease both;
+
+  &__top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 14px;
+  }
+
+  &__icon {
+    font-size: 22px;
+  }
+
+  &__value {
+    font-family: "Space Grotesk", sans-serif;
+    font-size: 26px;
+    font-weight: 700;
+    letter-spacing: -1px;
+    margin-bottom: 4px;
+  }
+
+  &__label {
+    font-size: 12px;
+    color: var(--text-secondary);
+    font-weight: 500;
+  }
+}
+
+.charts-row {
+  display: grid;
+  grid-template-columns: 3fr 2fr;
+  gap: 20px;
+  margin-bottom: 22px;
+}
+
+.chart-card {
+  padding: 24px;
+
+  &__header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    margin-bottom: 18px;
+  }
+
+  &__title {
+    font-size: 15px;
+    font-weight: 700;
+  }
+  &__sub {
+    font-size: 12px;
+    color: var(--text-secondary);
+    margin-top: 2px;
+  }
+
+  &__canvas-wrap {
+    position: relative;
+    height: 230px;
+  }
+}
+
+.donut-wrap {
+  position: relative;
+  height: 230px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.bar-wrap {
+  height: 230px;
+  padding: 8px 4px 0;
+  canvas {
+    width: 100% !important;
+    height: 100% !important;
+  }
+}
+
+.donut-center {
+  position: absolute;
+  text-align: center;
+
+  &__val {
+    font-family: "Space Grotesk", sans-serif;
+    font-size: 18px;
+    font-weight: 700;
+  }
+
+  &__lbl {
+    font-size: 11px;
+    color: var(--text-secondary);
+  }
+}
+
+.tx-card {
+  padding: 24px;
+
+  &__header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    margin-bottom: 16px;
+  }
+
+  &__title {
+    font-size: 15px;
+    font-weight: 700;
+  }
+  &__sub {
+    font-size: 12px;
+    color: var(--text-secondary);
+    margin-top: 2px;
+  }
+  &__link {
+    font-size: 12px;
+    padding: 6px 14px;
+    text-decoration: none;
+  }
+}
+
+.tx-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.tx-row {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 11px 12px;
+  border-radius: 13px;
+  border: 1px solid var(--glass-border);
+  background: var(--glass);
+  transition: all 0.2s;
+
+  &:hover {
+    background: var(--glass-hover);
+    transform: translateX(3px);
+  }
+
+  &__icon {
+    width: 40px;
+    height: 40px;
+    border-radius: 11px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 18px;
+    flex-shrink: 0;
+  }
+
+  &__info {
+    flex: 1;
+    min-width: 0;
+  }
+  &__name {
+    font-size: 13px;
+    font-weight: 600;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  &__meta {
+    font-size: 11px;
+    color: var(--text-secondary);
+    margin-top: 2px;
+  }
+
+  &__amount {
+    font-family: "Space Grotesk", sans-serif;
+    font-size: 14px;
+    font-weight: 700;
+    white-space: nowrap;
+
+    &.income {
+      color: var(--green);
+    }
+    &.expense {
+      color: var(--red);
+    }
+  }
+}
+
+.tx-empty {
+  text-align: center;
+  padding: 30px;
+  color: var(--text-secondary);
+  font-size: 14px;
+}
+
+@media (max-width: 900px) {
+  .kpi-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+  .charts-row {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 480px) {
+  .page {
+    padding: 16px;
+  }
+  .kpi-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.kpi-icon {
+  color: var(--accent);
+}
+
+.type-tabs {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 18px;
+  .tab-btn {
+    flex: 1;
+    justify-content: center;
+  }
+  .tab-btn.active {
+    background: linear-gradient(135deg, var(--accent), var(--accent2));
+    color: #fff;
+    border-color: transparent;
+  }
+}
+
+.field {
+  margin-bottom: 14px;
+  label {
+    display: block;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--text-secondary);
+    margin-bottom: 6px;
+  }
+}
+
+.modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 20px;
+  h3 {
+    font-family: "Cinzel", serif;
+    font-size: 16px;
+    font-weight: 600;
+  }
+}
+
+.modal-actions {
+  display: flex;
+  gap: 10px;
+  margin-top: 6px;
+  button {
+    flex: 1;
+    justify-content: center;
+  }
+}

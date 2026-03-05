@@ -1,0 +1,146 @@
+<div class="bg-orbs">
+  <div class="orb orb1"></div>
+  <div class="orb orb2"></div>
+  <div class="orb orb3"></div>
+</div>
+
+<div class="overlay" [class.show]="sidebarOpen()" (click)="sidebarOpen.set(false)"></div>
+
+<aside class="sidebar" [class.open]="sidebarOpen()">
+
+  <div class="sidebar__logo">
+    <img src="assets/gallifrex-logo.png" alt="Gallifrex" class="sidebar__logo-img" />
+    <div class="sidebar__logo-text">
+      <span class="logo-name">Gallifrex</span>
+      <span class="logo-version">2.0</span>
+    </div>
+  </div>
+
+  <nav class="sidebar__nav">
+    <a
+      *ngFor="let item of navItems"
+      [routerLink]="item.path"
+      routerLinkActive="active"
+      class="nav-item"
+      (click)="sidebarOpen.set(false)"
+    >
+      <i [attr.data-lucide]="item.icon" class="nav-item__icon icon-md"></i>
+      <span class="nav-item__label">{{ 'NAV.' + item.key | t }}</span>
+    </a>
+  </nav>
+
+  <div class="sidebar__footer">
+    <div class="user">
+      <div class="user__avatar">{{ userInitial() }}</div>
+      <div class="user__info">
+        <div class="user__name">{{ auth.user()?.name }}</div>
+        <div class="user__email">{{ auth.user()?.email }}</div>
+      </div>
+    </div>
+    <button class="glass-btn sidebar__logout" (click)="auth.logout()">
+      <i data-lucide="log-out" class="icon-sm"></i>
+    </button>
+  </div>
+
+</aside>
+
+<main class="main">
+
+  <div class="topbar">
+    <button class="glass-btn topbar__menu" (click)="sidebarOpen.set(!sidebarOpen())">
+      <i data-lucide="menu" class="icon-md"></i>
+    </button>
+    <div class="topbar__right">
+
+      <div
+        class="currency-selector"
+        (click)="toggleCurrencyMenu(); $event.stopPropagation()"
+        [class.open]="currencyMenuOpen()"
+      >
+        <span class="currency-current">
+          {{ currency.current().flag }}
+          {{ currency.current().code }}
+        </span>
+        <i data-lucide="chevron-down" class="icon-xs"></i>
+
+        <div
+          class="currency-dropdown"
+          *ngIf="currencyMenuOpen()"
+          (click)="$event.stopPropagation()"
+        >
+          <div class="currency-dropdown__rate" *ngIf="currency.loading()">
+            <i data-lucide="loader" class="icon-xs"></i> Cargando...
+          </div>
+          <button
+            *ngFor="let c of currency.currencies"
+            class="currency-option"
+            [class.active]="currency.current().code === c.code"
+            (click)="selectCurrency(c); $event.stopPropagation()"
+          >
+            <span class="currency-option__flag">{{ c.flag }}</span>
+            <span class="currency-option__code">{{ c.code }}</span>
+            <span class="currency-option__symbol muted">{{ c.symbol }}</span>
+          </button>
+        </div>
+      </div>
+
+      <div class="lang-selector" (click)="toggleLangMenu(); $event.stopPropagation()" [class.open]="langMenuOpen()">
+        <span class="lang-current">
+          {{ translation.currentLang().flag }} {{ translation.currentLang().label }}
+        </span>
+        <i data-lucide="chevron-down" class="icon-xs"></i>
+        <div class="lang-dropdown" *ngIf="langMenuOpen()" (click)="$event.stopPropagation()">
+          <button
+            *ngFor="let lang of translation.langs"
+            class="lang-option"
+            [class.active]="translation.current() === lang.code"
+            (click)="changeLang(lang.code); $event.stopPropagation()"
+          >
+            {{ lang.flag }} {{ lang.label }}
+          </button>
+        </div>
+      </div>
+
+      <button class="glass-btn theme-btn" (click)="toggleTheme()">
+        <!-- Sol -->
+        <svg
+          *ngIf="theme.theme() === 'dark'"
+          xmlns="http://www.w3.org/2000/svg"
+          width="20"
+          height="20"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+        >
+          <circle cx="12" cy="12" r="4" />
+          <path
+            d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41
+             M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"
+          />
+        </svg>
+        <!-- Luna -->
+        <svg
+          *ngIf="theme.theme() === 'light'"
+          xmlns="http://www.w3.org/2000/svg"
+          width="20"
+          height="20"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+        >
+          <path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z" />
+        </svg>
+      </button>
+
+    </div>
+  </div>
+
+  <router-outlet />
+
+</main>

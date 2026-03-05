@@ -1,0 +1,157 @@
+<div class="page">
+
+  <div class="page-header">
+    <div>
+      <h1 class="page-title">{{ 'CATEGORIES.TITLE' | t }}</h1>
+      <p class="page-sub">{{ categories().length }} {{ 'CATEGORIES.SUBTITLE' | t }}</p>
+    </div>
+    <div class="header-right">
+      <button class="glass-btn" (click)="exportCsv()"><i data-lucide="download" class="icon-sm"></i> CSV</button>
+      <button class="btn-primary" (click)="openModal()"><i data-lucide="plus" class="icon-sm"></i> {{ 'CATEGORIES.NEW' | t }}</button>
+    </div>
+  </div>
+
+  <div class="filter-tabs">
+    <button [class.active]="filterType === ''" (click)="setFilter('')">
+      <i data-lucide="layers" class="icon-sm"></i> {{ 'CATEGORIES.FILTER_ALL' | t }}
+    </button>
+    <button [class.active]="filterType === 'expense'" (click)="setFilter('expense')">
+      <i data-lucide="arrow-up-circle" class="icon-sm"></i> {{ 'CATEGORIES.TYPE_EXPENSE' | t }}
+    </button>
+    <button [class.active]="filterType === 'income'" (click)="setFilter('income')">
+      <i data-lucide="arrow-down-circle" class="icon-sm"></i> {{ 'CATEGORIES.TYPE_INCOME' | t }}
+    </button>
+  </div>
+
+  <div class="loading-state" *ngIf="loading()"><div class="spinner"></div></div>
+
+  <div class="cats-grid" *ngIf="!loading()">
+
+    <div class="cat-card glass-card" *ngFor="let c of filtered()">
+      <div class="cat-card__icon-wrap" [style.background]="c.color + '22'">
+        <span class="cat-card__icon">{{ c.icon }}</span>
+      </div>
+      <div class="cat-card__name">{{ c.name }}</div>
+      <div class="cat-card__tags">
+        <span class="badge" [class.badge-up]="c.type === 'income'" [class.badge-down]="c.type === 'expense'">
+          {{ getTypeLabel(c.type) }}
+        </span>
+        <span class="default-tag" *ngIf="c.is_default">{{ 'CATEGORIES.DEFAULT_TAG' | t }}</span>
+      </div>
+      <div class="cat-card__color" [style.background]="c.color"></div>
+      <div class="cat-card__actions">
+        <button class="icon-btn" (click)="openModal(c)" [title]="'COMMON.EDIT' | t">
+          <i data-lucide="pencil" class="icon-sm"></i>
+        </button>
+        <button class="icon-btn danger" (click)="confirmDeleteCategory(c)"
+          [disabled]="!!c.is_default"
+          [title]="getDeleteTitle(c)">
+          <i data-lucide="trash-2" class="icon-sm"></i>
+        </button>
+      </div>
+    </div>
+
+    <div class="empty-state" *ngIf="!filtered().length">
+      <i data-lucide="tag" class="icon-xxl"></i>
+      <p>{{ 'CATEGORIES.EMPTY' | t }}</p>
+    </div>
+
+  </div>
+</div>
+
+<div class="modal-overlay" *ngIf="showModal()" (click)="closeModal()">
+  <div class="modal-box" (click)="$event.stopPropagation()">
+
+    <div class="modal-hd">
+      <h3>{{ getModalTitle() }}</h3>
+      <button class="close-btn" (click)="closeModal()">
+        <i data-lucide="x" class="icon-sm"></i>
+      </button>
+    </div>
+
+    <div class="preview glass-card" [style.border-color]="form.color + '55'">
+      <div class="preview__icon" [style.background]="form.color + '33'">{{ form.icon }}</div>
+      <div class="preview__name">
+        <ng-container *ngIf="form.name">{{ form.name }}</ng-container>
+        <ng-container *ngIf="!form.name">{{ 'CATEGORIES.MY_CATEGORY' | t }}</ng-container>
+      </div>
+      <div class="preview__dot" [style.background]="form.color"></div>
+    </div>
+
+    <div class="form-row">
+      <div class="field flex1">
+        <label>{{ 'CATEGORIES.NAME_LABEL' | t }}</label>
+        <input class="glass-input" type="text" [(ngModel)]="form.name" placeholder="{{ 'CATEGORIES.NAME_PLACEHOLDER' | t }}">
+      </div>
+      <div class="field">
+        <label>{{ 'CATEGORIES.TYPE_LABEL' | t }}</label>
+        <select class="glass-input" [(ngModel)]="form.type">
+          <option value="expense">{{ 'CATEGORIES.TYPE_EXPENSE' | t }}</option>
+          <option value="income">{{ 'CATEGORIES.TYPE_INCOME' | t }}</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="field">
+      <label>{{ 'CATEGORIES.ICON_LABEL' | t }}</label>
+      <div class="emoji-input-row">
+        <div class="emoji-preview">{{ form.icon }}</div>
+        <input class="glass-input emoji-free" type="text" [(ngModel)]="form.icon"
+          placeholder="{{ 'CATEGORIES.ICON_PLACEHOLDER' | t }}" maxlength="4">
+      </div>
+      <div class="emoji-grid" style="margin-top: 10px">
+        <button
+          *ngFor="let e of emojis"
+          class="emoji-btn"
+          [class.selected]="form.icon === e"
+          (click)="form.icon = e"
+        >{{ e }}</button>
+      </div>
+    </div>
+
+    <div class="field">
+      <label>{{ 'CATEGORIES.COLOR_LABEL' | t }}</label>
+      <div class="color-grid">
+        <div
+          *ngFor="let c of colors"
+          class="color-dot"
+          [style.background]="c"
+          [class.selected]="form.color === c"
+          (click)="form.color = c"
+        ></div>
+      </div>
+    </div>
+
+    <div class="error-msg" *ngIf="formError()">{{ formError() }}</div>
+
+    <div class="modal-actions">
+      <button class="glass-btn" (click)="closeModal()">{{ 'COMMON.CANCEL' | t }}</button>
+      <button class="btn-primary" (click)="submit()" [disabled]="saving()">
+        <i data-lucide="save" class="icon-sm"></i>
+        {{ getSaveLabel() }}
+      </button>
+    </div>
+
+  </div>
+</div>
+
+<div class="modal-overlay" *ngIf="deleteTarget()" (click)="deleteTarget.set(null)">
+  <div class="modal-box confirm" (click)="$event.stopPropagation()">
+    <div class="modal-hd">
+      <h3>{{ 'CATEGORIES.DELETE_TITLE' | t }}</h3>
+      <button class="close-btn" (click)="deleteTarget.set(null)"><i data-lucide="x" class="icon-sm"></i></button>
+    </div>
+    <p class="confirm__desc">
+      <ng-container *ngIf="deleteTarget()">
+        {{ deleteTarget()!.icon }} {{ deleteTarget()!.name }}
+      </ng-container>
+    </p>
+    <p class="confirm__warn">{{ 'MOVEMENTS.DELETE_WARNING' | t }}</p>
+    <div class="modal-actions">
+      <button class="glass-btn" (click)="deleteTarget.set(null)">{{ 'COMMON.CANCEL' | t }}</button>
+      <button class="btn-danger" (click)="doDelete()">
+        <i data-lucide="trash-2" class="icon-sm"></i> {{ 'COMMON.DELETE' | t }}
+      </button>
+    </div>
+  </div>
+</div>

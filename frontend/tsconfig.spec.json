@@ -1,0 +1,13 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "outDir": "./out-tsc/spec",
+    "types": ["vitest/globals", "node"],
+    "paths": {
+      "@angular/core/src/metadata/resource_loading": [
+        "./node_modules/@angular/core/src/metadata/resource_loading.d.ts"
+      ]
+    }
+  },
+  "include": ["src/**/*.spec.ts", "src/**/*.d.ts", "src/test-setup.ts"]
+}

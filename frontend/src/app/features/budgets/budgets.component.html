@@ -1,0 +1,173 @@
+<div class="page">
+
+  <div class="page-header">
+    <div>
+      <h1 class="page-title">{{ 'BUDGETS.TITLE' | t }}</h1>
+      <p class="page-sub">{{ 'BUDGETS.SUBTITLE' | t }}</p>
+    </div>
+    <div class="header-actions">
+      <select class="glass-input select-sm" [(ngModel)]="selectedMonth" (change)="load()">
+        <option *ngFor="let i of monthNumbers" [value]="i">{{ ('MONTHS.' + i) | t }}</option>
+      </select>
+      <select class="glass-input select-sm" [(ngModel)]="selectedYear" (change)="load()">
+        <option *ngFor="let y of years" [value]="y">{{ y }}</option>
+      </select>
+      <button class="glass-btn" (click)="exportCsv()"><i data-lucide="download" class="icon-sm"></i> CSV</button>
+      <button class="btn-primary" (click)="openModal()"><i data-lucide="plus" class="icon-sm"></i> {{ 'BUDGETS.NEW' | t }}</button>
+    </div>
+  </div>
+
+  <div class="summary-grid">
+    <div class="glass-card sum-card">
+      <div class="sum-card__icon"><i data-lucide="wallet" class="icon-md"></i></div>
+      <div class="sum-card__label">{{ 'BUDGETS.BUDGETED' | t }}</div>
+      <div class="sum-card__val">{{ eur(totalBudget()) }}</div>
+    </div>
+    <div class="glass-card sum-card">
+      <div class="sum-card__icon"><i data-lucide="arrow-up-circle" class="icon-md"></i></div>
+      <div class="sum-card__label">{{ 'BUDGETS.SPENT' | t }}</div>
+      <div class="sum-card__val" [class.over]="totalSpent() > totalBudget()">{{ eur(totalSpent()) }}</div>
+    </div>
+    <div class="glass-card sum-card">
+      <div class="sum-card__icon"><i data-lucide="piggy-bank" class="icon-md"></i></div>
+      <div class="sum-card__label">{{ 'BUDGETS.REMAINING' | t }}</div>
+      <div class="sum-card__val" [class.positive]="remaining() >= 0" [class.negative]="remaining() < 0">{{ eur(remaining()) }}</div>
+    </div>
+    <div class="glass-card sum-card">
+      <div class="sum-card__icon"><i data-lucide="percent" class="icon-md"></i></div>
+      <div class="sum-card__label">{{ 'BUDGETS.PCT_USED' | t }}</div>
+      <div class="sum-card__val" [class.over]="pctUsed() > 100" [class.warn]="pctUsed() > 80 && pctUsed() <= 100">
+        {{ pctUsed() | number:'1.0-0' }}%
+      </div>
+    </div>
+  </div>
+
+  <div class="glass-card overall-bar" *ngIf="totalBudget() > 0">
+    <div class="overall-bar__header">
+      <span>{{ 'BUDGETS.OVERALL_PROGRESS' | t }}</span>
+      <span [class.over]="pctUsed() > 100">{{ eur(totalSpent()) }} / {{ eur(totalBudget()) }}</span>
+    </div>
+    <div class="overall-bar__track">
+      <div
+        class="overall-bar__fill"
+        [style.width.%]="Math.min(pctUsed(), 100)"
+        [style.background]="getProgressBarColor()"
+      ></div>
+    </div>
+  </div>
+
+  <div class="loading-state" *ngIf="loading()"><div class="spinner"></div></div>
+
+  <div class="budgets-grid" *ngIf="!loading()">
+
+    <div class="budget-card glass-card" *ngFor="let b of budgets()">
+      <div class="budget-card__header">
+        <div class="budget-card__cat">
+          <div class="budget-card__icon" [style.background]="b.color + '22'">{{ b.icon }}</div>
+          <div>
+            <div class="budget-card__name">{{ b.category_name }}</div>
+            <div class="budget-card__meta">{{ eur(+(b.spent || 0)) }} {{ 'BUDGETS.SPENT_LABEL' | t }}</div>
+          </div>
+        </div>
+        <div class="budget-card__actions">
+          <button class="icon-btn" (click)="openModal(b)" [title]="'COMMON.EDIT' | t">
+            <i data-lucide="pencil" class="icon-sm"></i>
+          </button>
+          <button class="icon-btn danger" (click)="confirmDelete(b)" [title]="'COMMON.DELETE' | t">
+            <i data-lucide="trash-2" class="icon-sm"></i>
+          </button>
+        </div>
+      </div>
+
+      <div class="budget-card__amounts">
+        <span class="budget-card__spent" [class.over]="+(b.spent || 0) > +b.amount">
+          {{ eur(+(b.spent || 0)) }}
+        </span>
+        <span class="budget-card__limit">/ {{ eur(+b.amount) }}</span>
+      </div>
+
+      <div class="bar-track">
+        <div class="bar-fill" [style.width.%]="pct(b)" [style.background]="barColor(b)"></div>
+      </div>
+
+      <div class="budget-card__footer">
+        <span [class.over]="+(b.spent || 0) > +b.amount">
+          {{ pct(b) | number:'1.0-0' }}{{ 'BUDGETS.PCT_USED_LABEL' | t }}
+        </span>
+        <span class="muted" [class.over]="+(b.spent || 0) > +b.amount">
+          <ng-container *ngIf="+(b.spent || 0) > +b.amount">
+            <i data-lucide="triangle-alert" class="icon-xs"></i> {{ 'BUDGETS.EXCEEDED' | t }}
+          </ng-container>
+          <ng-container *ngIf="+(b.spent || 0) <= +b.amount">
+            {{ 'BUDGETS.REMAINING_LABEL' | t }}: {{ eur(+b.amount - +(b.spent || 0)) }}
+          </ng-container>
+        </span>
+      </div>
+    </div>
+
+    <div class="empty-state" *ngIf="!budgets().length">
+      <div class="empty-state__icon"><i data-lucide="target" class="icon-xxl"></i></div>
+      <h3>{{ 'BUDGETS.EMPTY_TITLE' | t }}</h3>
+      <p>{{ 'BUDGETS.EMPTY_DESC' | t }}</p>
+      <button class="btn-primary" (click)="openModal()">
+        <i data-lucide="plus" class="icon-sm"></i> {{ 'BUDGETS.EMPTY_BTN' | t }}
+      </button>
+    </div>
+
+  </div>
+</div>
+
+<div class="modal-overlay" *ngIf="showModal()" (click)="closeModal()">
+  <div class="modal-box" (click)="$event.stopPropagation()">
+
+    <div class="modal-hd">
+      <h3>{{ getModalTitle() }}</h3>
+      <button class="close-btn" (click)="closeModal()">
+        <i data-lucide="x" class="icon-sm"></i>
+      </button>
+    </div>
+
+    <div class="field">
+      <label>{{ 'BUDGETS.CATEGORY_LABEL' | t }}</label>
+      <select class="glass-input" [(ngModel)]="form.category_id">
+        <option [ngValue]="undefined">{{ 'BUDGETS.CATEGORY_PLACEHOLDER' | t }}</option>
+        <option *ngFor="let c of expenseCats()" [ngValue]="c.id">{{ c.icon }} {{ c.name }}</option>
+      </select>
+    </div>
+
+    <div class="field" style="margin-top:16px">
+      <label>{{ 'BUDGETS.AMOUNT_LABEL' | t }}</label>
+      <input class="glass-input" type="number" [(ngModel)]="form.amount" min="0" step="10" placeholder="500">
+    </div>
+
+    <div class="error-msg" *ngIf="formError()">{{ formError() }}</div>
+
+    <div class="modal-actions">
+      <button class="glass-btn" (click)="closeModal()">{{ 'COMMON.CANCEL' | t }}</button>
+      <button class="btn-primary" (click)="submit()" [disabled]="saving()">
+        <i data-lucide="save" class="icon-sm"></i>
+        {{ getSaveLabel() }}
+      </button>
+    </div>
+
+  </div>
+</div>
+
+<div class="modal-overlay" *ngIf="deleteTarget()" (click)="deleteTarget.set(null)">
+  <div class="modal-box confirm" (click)="$event.stopPropagation()">
+    <div class="modal-hd">
+      <h3>{{ 'BUDGETS.DELETE_TITLE' | t }}</h3>
+      <button class="close-btn" (click)="deleteTarget.set(null)"><i data-lucide="x" class="icon-sm"></i></button>
+    </div>
+    <p class="confirm__desc">
+      {{ getDeleteIcon() }} {{ getDeleteCategoryName() }} &mdash; {{ getDeleteAmount() }}
+    </p>
+    <p class="confirm__warn">{{ 'MOVEMENTS.DELETE_WARNING' | t }}</p>
+    <div class="modal-actions">
+      <button class="glass-btn" (click)="deleteTarget.set(null)">{{ 'COMMON.CANCEL' | t }}</button>
+      <button class="btn-danger" (click)="doDelete()">
+        <i data-lucide="trash-2" class="icon-sm"></i> {{ 'COMMON.DELETE' | t }}
+      </button>
+    </div>
+  </div>
+</div>

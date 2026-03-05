@@ -1,0 +1,220 @@
+<div class="page">
+
+  <div class="page-header">
+    <div>
+      <h1 class="page-title">{{ 'MOVEMENTS.TITLE' | t }}</h1>
+      <p class="page-sub">{{ total() }} {{ 'MOVEMENTS.RECORDS_FOUND' | t }}</p>
+    </div>
+    <div class="header-right">
+      <button class="glass-btn" (click)="exportCsv()">
+        <i data-lucide="download" class="icon-sm"></i>
+        {{ 'COMMON.EXPORT_CSV' | t }}
+      </button>
+      <button class="btn-primary" (click)="openModal()">
+        <i data-lucide="plus" class="icon-sm"></i> {{ 'MOVEMENTS.NEW' | t }}
+      </button>
+    </div>
+  </div>
+
+  <div class="glass-card filter-bar">
+    <div class="filter-group">
+      <label>{{ 'MOVEMENTS.SEARCH' | t }}</label>
+      <input
+        class="glass-input"
+        type="text"
+        [(ngModel)]="filters.search"
+        (input)="debouncedLoad()"
+        [placeholder]="'MOVEMENTS.SEARCH_PLACEHOLDER' | t"
+      />
+    </div>
+    <div class="filter-group">
+      <label>{{ 'MOVEMENTS.TYPE' | t }}</label>
+      <select class="glass-input" [(ngModel)]="filters.type" (change)="load()">
+        <option value="">{{ 'COMMON.ALL' | t }}</option>
+        <option value="expense">{{ 'MOVEMENTS.EXPENSE' | t }}</option>
+        <option value="income">{{ 'MOVEMENTS.INCOME' | t }}</option>
+      </select>
+    </div>
+    <div class="filter-group">
+      <label>{{ 'MOVEMENTS.CATEGORY' | t }}</label>
+      <select class="glass-input" [(ngModel)]="filters.category_id" (change)="load()">
+        <option value="">{{ 'MOVEMENTS.ALL_CATEGORIES' | t }}</option>
+        <option *ngFor="let c of categories()" [value]="c.id">{{ c.icon }} {{ c.name }}</option>
+      </select>
+    </div>
+    <div class="filter-group">
+      <label>{{ 'MOVEMENTS.MONTH' | t }}</label>
+      <select class="glass-input" [(ngModel)]="filters.month" (change)="load()">
+        <option value="">{{ 'COMMON.ALL' | t }}</option>
+        <option *ngFor="let i of monthNumbers" [value]="i">{{ ('MONTHS.' + i) | t }}</option>
+      </select>
+    </div>
+    <div class="filter-group">
+      <label>{{ 'MOVEMENTS.YEAR' | t }}</label>
+      <select class="glass-input" [(ngModel)]="filters.year" (change)="load()">
+        <option *ngFor="let y of years" [value]="y">{{ y }}</option>
+      </select>
+    </div>
+    <button class="glass-btn" (click)="clearFilters()">
+      <i data-lucide="x" class="icon-sm"></i> {{ 'COMMON.CLEAR' | t }}
+    </button>
+  </div>
+
+  <div class="loading-state" *ngIf="loading()"><div class="spinner"></div></div>
+
+  <div class="glass-card table-card" *ngIf="!loading()">
+    <table class="table">
+      <thead>
+        <tr>
+          <th>{{ 'MOVEMENTS.CATEGORY_COL' | t }}</th>
+          <th>{{ 'MOVEMENTS.DESCRIPTION' | t }}</th>
+          <th>{{ 'MOVEMENTS.DATE' | t }}</th>
+          <th>{{ 'MOVEMENTS.TYPE_COL' | t }}</th>
+          <th class="right">{{ 'MOVEMENTS.AMOUNT' | t }}</th>
+          <th class="center">{{ 'MOVEMENTS.ACTIONS' | t }}</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr class="table__row" *ngFor="let exp of expenses()">
+          <td>
+            <div class="cat-cell">
+              <span class="cat-cell__dot" [style.background]="exp.category_color + '33'">
+                {{ getCategoryIcon(exp.category_icon) }}
+              </span>
+              <ng-container *ngIf="exp.category_name">{{ exp.category_name }}</ng-container>
+              <ng-container *ngIf="!exp.category_name">{{ 'MOVEMENTS.NO_CATEGORY' | t }}</ng-container>
+            </div>
+          </td>
+          <td class="muted ellipsis">
+            <ng-container *ngIf="exp.description">{{ exp.description }}</ng-container>
+            <ng-container *ngIf="!exp.description">-</ng-container>
+          </td>
+          <td class="muted nowrap">{{ exp.date | date:'dd/MM/yyyy' }}</td>
+          <td>
+            <span class="badge" [class.badge-up]="exp.type === 'income'" [class.badge-down]="exp.type === 'expense'">
+              {{ getTypeLabel(exp.type) }}
+            </span>
+          </td>
+          <td class="amount right" [class.income]="exp.type === 'income'" [class.expense]="exp.type === 'expense'">
+            {{ getAmountSign(exp.type) }}{{ eur(+exp.amount) }}
+          </td>
+          <td class="center nowrap">
+            <button class="icon-btn" (click)="openModal(exp)" [title]="'COMMON.EDIT' | t">
+              <i data-lucide="pencil" class="icon-sm"></i>
+            </button>
+            <button class="icon-btn danger" (click)="confirmDelete(exp)" [title]="'COMMON.DELETE' | t">
+              <i data-lucide="trash-2" class="icon-sm"></i>
+            </button>
+          </td>
+        </tr>
+        <tr *ngIf="!expenses().length">
+          <td colspan="6" class="empty-row">{{ 'MOVEMENTS.NO_MOVEMENTS' | t }}</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <div class="pagination" *ngIf="total() > pageSize">
+      <button class="glass-btn" [disabled]="page() === 0" (click)="prevPage()">
+        <i data-lucide="chevron-left" class="icon-sm"></i> {{ 'COMMON.PREV' | t }}
+      </button>
+      <span class="pagination__info">{{ 'COMMON.PAGE' | t }} {{ page() + 1 }} / {{ totalPages() }}</span>
+      <button class="glass-btn" [disabled]="page() >= totalPages() - 1" (click)="nextPage()">
+        {{ 'COMMON.NEXT' | t }} <i data-lucide="chevron-right" class="icon-sm"></i>
+      </button>
+    </div>
+  </div>
+
+  <div class="summary-row" *ngIf="!loading() && expenses().length">
+    <div class="glass-card summary-card">
+      <span><i data-lucide="arrow-down-circle" class="icon-sm"></i> {{ 'MOVEMENTS.SUMMARY_INCOME' | t }}</span>
+      <strong class="green">{{ eur(totalIncome()) }}</strong>
+    </div>
+    <div class="glass-card summary-card">
+      <span><i data-lucide="arrow-up-circle" class="icon-sm"></i> {{ 'MOVEMENTS.SUMMARY_EXPENSES' | t }}</span>
+      <strong class="red">{{ eur(totalExpenseAmt()) }}</strong>
+    </div>
+    <div class="glass-card summary-card">
+      <span><i data-lucide="wallet" class="icon-sm"></i> {{ 'MOVEMENTS.SUMMARY_BALANCE' | t }}</span>
+      <strong
+        [class.green]="totalIncome() - totalExpenseAmt() >= 0"
+        [class.red]="totalIncome() - totalExpenseAmt() < 0"
+      >
+        {{ eur(totalIncome() - totalExpenseAmt()) }}
+      </strong>
+    </div>
+  </div>
+
+</div>
+
+<div class="modal-overlay" *ngIf="showModal()" (click)="closeModal()">
+  <div class="modal-box" (click)="$event.stopPropagation()">
+    <div class="modal-hd">
+      <h3>{{ getModalTitle() }}</h3>
+      <button class="close-btn" (click)="closeModal()">
+        <i data-lucide="x" class="icon-sm"></i>
+      </button>
+    </div>
+
+    <div class="type-tabs">
+      <button [class.active]="form.type === 'expense'" (click)="setType('expense')">
+        <i data-lucide="arrow-up-circle" class="icon-sm"></i> {{ 'MOVEMENTS.EXPENSE' | t }}
+      </button>
+      <button [class.active]="form.type === 'income'" (click)="setType('income')">
+        <i data-lucide="arrow-down-circle" class="icon-sm"></i> {{ 'MOVEMENTS.INCOME' | t }}
+      </button>
+    </div>
+
+    <div class="form-grid">
+      <div class="field">
+        <label>{{ 'MOVEMENTS.AMOUNT_LABEL' | t }}</label>
+        <input class="glass-input" type="number" [(ngModel)]="form.amount" min="0" step="0.01" placeholder="0.00" />
+      </div>
+      <div class="field">
+        <label>{{ 'MOVEMENTS.DATE_LABEL' | t }}</label>
+        <input class="glass-input" type="date" [(ngModel)]="form.date" />
+      </div>
+      <div class="field full">
+        <label>{{ 'MOVEMENTS.DESCRIPTION_LABEL' | t }}</label>
+        <input class="glass-input" type="text" [(ngModel)]="form.description" [placeholder]="'MOVEMENTS.DESCRIPTION_PLACEHOLDER' | t" />
+      </div>
+      <div class="field full">
+        <label>{{ 'MOVEMENTS.CATEGORY_LABEL' | t }}</label>
+        <select class="glass-input" [(ngModel)]="form.category_id">
+          <option [ngValue]="null">{{ 'MOVEMENTS.NO_CATEGORY_OPTION' | t }}</option>
+          <option *ngFor="let c of filteredCategories()" [ngValue]="c.id">{{ c.icon }} {{ c.name }}</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="error-msg" *ngIf="formError()">{{ formError() }}</div>
+
+    <div class="modal-actions">
+      <button class="glass-btn" (click)="closeModal()">{{ 'COMMON.CANCEL' | t }}</button>
+      <button class="btn-primary" (click)="submit()" [disabled]="saving()">
+        <i data-lucide="save" class="icon-sm"></i>
+        {{ getSaveLabel() }}
+      </button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" *ngIf="deleteTarget()" (click)="deleteTarget.set(null)">
+  <div class="modal-box confirm" (click)="$event.stopPropagation()">
+    <div class="modal-hd">
+      <h3>{{ 'MOVEMENTS.DELETE_TITLE' | t }}</h3>
+      <button class="close-btn" (click)="deleteTarget.set(null)">
+        <i data-lucide="x" class="icon-sm"></i>
+      </button>
+    </div>
+    <p class="confirm__desc">
+      "{{ getDeleteDescription() }}" — {{ getDeleteAmount() }}
+    </p>
+    <p class="confirm__warn">{{ 'MOVEMENTS.DELETE_WARNING' | t }}</p>
+    <div class="modal-actions">
+      <button class="glass-btn" (click)="deleteTarget.set(null)">{{ 'COMMON.CANCEL' | t }}</button>
+      <button class="btn-danger" (click)="doDelete()">
+        <i data-lucide="trash-2" class="icon-sm"></i> {{ 'COMMON.DELETE' | t }}
+      </button>
+    </div>
+  </div>
+</div>

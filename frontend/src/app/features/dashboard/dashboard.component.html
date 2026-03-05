@@ -1,0 +1,142 @@
+<div class="page">
+  <div class="page-header">
+    <div>
+      <h1 class="page-title">{{ 'DASHBOARD.TITLE' | t }}</h1>
+      <p class="page-sub">
+        {{ currentMonth }} &middot;
+        <ng-container *ngIf="auth.user()">{{ auth.user()!.name }}</ng-container>
+      </p>
+    </div>
+    <div class="header-actions">
+      <div class="month-nav">
+        <button class="glass-btn" (click)="prevMonth()"><i data-lucide="chevron-left" class="icon-md"></i></button>
+        <span class="month-label glass-btn">{{ currentMonth }}</span>
+        <button class="glass-btn" (click)="nextMonth()"><i data-lucide="chevron-right" class="icon-md"></i></button>
+      </div>
+      <button class="glass-btn" (click)="load()"><i data-lucide="refresh-cw" class="icon-md"></i></button>
+      <button class="btn-primary" (click)="openAddModal()">
+        <i data-lucide="plus" class="icon-sm"></i> {{ 'DASHBOARD.NEW_MOVEMENT' | t }}
+      </button>
+    </div>
+  </div>
+
+  <div class="loading-state" *ngIf="loading()"><div class="spinner"></div></div>
+
+  <ng-container *ngIf="!loading() && data()">
+    <div class="kpi-grid">
+      <div class="kpi-card glass-card" *ngFor="let k of kpis(); let i = index" [style.animation-delay]="(i * 60) + 'ms'">
+        <div class="kpi-card__top">
+          <i [attr.data-lucide]="k.lucide" class="icon-xl kpi-icon"></i>
+          <span class="badge" [class.badge-up]="k.up" [class.badge-down]="!k.up">{{ k.badge }}</span>
+        </div>
+        <div class="kpi-card__value">{{ k.value }}</div>
+        <div class="kpi-card__label">{{ k.label }}</div>
+      </div>
+    </div>
+
+    <div class="charts-row">
+      <div class="glass-card chart-card">
+        <div class="chart-card__header">
+          <div>
+            <div class="chart-card__title">{{ 'DASHBOARD.CASHFLOW' | t }}</div>
+            <div class="chart-card__sub">{{ 'DASHBOARD.LAST_30_DAYS' | t }}</div>
+          </div>
+        </div>
+        <div class="chart-card__canvas-wrap"><canvas #lineCanvas></canvas></div>
+      </div>
+      <div class="glass-card chart-card">
+        <div class="chart-card__header">
+          <div>
+            <div class="chart-card__title">{{ 'DASHBOARD.BY_CATEGORY' | t }}</div>
+            <div class="chart-card__sub">{{ 'DASHBOARD.THIS_MONTH' | t }}</div>
+          </div>
+          <button class="glass-btn" (click)="toggleChart()">
+            <i [attr.data-lucide]="getToggleIcon()" class="icon-sm"></i>
+            {{ getToggleLabel() }}
+          </button>
+        </div>
+        <ng-container *ngIf="chartType() === 'donut'">
+          <div class="donut-wrap">
+            <canvas #donutCanvas></canvas>
+            <div class="donut-center">
+              <div class="donut-center__val">{{ eur(totalCatExpenses()) }}</div>
+              <div class="donut-center__lbl">{{ 'DASHBOARD.EXPENSES' | t }}</div>
+            </div>
+          </div>
+        </ng-container>
+        <ng-container *ngIf="chartType() === 'bar'">
+          <div class="bar-wrap">
+            <canvas #barCanvas></canvas>
+          </div>
+        </ng-container>
+      </div>
+    </div>
+
+    <div class="glass-card tx-card">
+      <div class="tx-card__header">
+        <div>
+          <div class="tx-card__title">{{ 'DASHBOARD.RECENT_MOVEMENTS' | t }}</div>
+          <div class="tx-card__sub">{{ 'DASHBOARD.RECENT_ACTIVITY' | t }}</div>
+        </div>
+        <a routerLink="/expenses" class="glass-btn tx-card__link">
+          {{ 'DASHBOARD.VIEW_ALL' | t }} <i data-lucide="arrow-right" class="icon-sm"></i>
+        </a>
+      </div>
+      <div class="tx-list">
+        <div class="tx-row" *ngFor="let tx of data()!.recentTransactions">
+          <div class="tx-row__icon" [style.background]="tx.category_color + '22'">{{ getTxIcon(tx.category_icon) }}</div>
+          <div class="tx-row__info">
+            <div class="tx-row__name">
+              <ng-container *ngIf="tx.description">{{ tx.description }}</ng-container>
+              <ng-container *ngIf="!tx.description && tx.category_name">{{ tx.category_name }}</ng-container>
+              <ng-container *ngIf="!tx.description && !tx.category_name">{{ 'DASHBOARD.NO_DESCRIPTION' | t }}</ng-container>
+            </div>
+            <div class="tx-row__meta">
+              <ng-container *ngIf="tx.category_name">{{ tx.category_name }}</ng-container>
+              <ng-container *ngIf="!tx.category_name">-</ng-container>
+              &middot; {{ tx.date | date:'dd MMM' }}
+            </div>
+          </div>
+          <div class="tx-row__amount" [class.income]="tx.type === 'income'" [class.expense]="tx.type === 'expense'">
+            {{ getTxSign(tx.type) }}{{ eur(+tx.amount) }}
+          </div>
+        </div>
+        <div class="tx-empty" *ngIf="!data()!.recentTransactions.length">{{ 'DASHBOARD.NO_MOVEMENTS' | t }}</div>
+      </div>
+    </div>
+  </ng-container>
+</div>
+
+<div class="modal-overlay" *ngIf="showAddModal()" (click)="showAddModal.set(false)">
+  <div class="modal-box" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h3>{{ 'DASHBOARD.NEW_MOVEMENT' | t }}</h3>
+      <button class="glass-btn" (click)="showAddModal.set(false)"><i data-lucide="x" class="icon-sm"></i></button>
+    </div>
+    <div class="type-tabs">
+      <button [class.active]="txForm.type === 'expense'" (click)="setTxType('expense')" class="glass-btn tab-btn">
+        <i data-lucide="arrow-up-circle" class="icon-sm"></i> {{ 'MOVEMENTS.EXPENSE' | t }}
+      </button>
+      <button [class.active]="txForm.type === 'income'" (click)="setTxType('income')" class="glass-btn tab-btn">
+        <i data-lucide="arrow-down-circle" class="icon-sm"></i> {{ 'MOVEMENTS.INCOME' | t }}
+      </button>
+    </div>
+    <div class="field"><label>{{ 'MOVEMENTS.AMOUNT_LABEL' | t }}</label><input class="glass-input" type="number" [(ngModel)]="txForm.amount" placeholder="0.00" min="0" step="0.01"></div>
+    <div class="field"><label>{{ 'MOVEMENTS.DESCRIPTION_LABEL' | t }}</label><input class="glass-input" type="text" [(ngModel)]="txForm.description" [placeholder]="'MOVEMENTS.DESCRIPTION_PLACEHOLDER' | t"></div>
+    <div class="field">
+      <label>{{ 'MOVEMENTS.CATEGORY_LABEL' | t }}</label>
+      <select class="glass-input" [(ngModel)]="txForm.category_id">
+        <option [ngValue]="null">{{ 'MOVEMENTS.NO_CATEGORY_OPTION' | t }}</option>
+        <option *ngFor="let c of filteredCats()" [ngValue]="c.id">{{ c.icon }} {{ c.name }}</option>
+      </select>
+    </div>
+    <div class="field"><label>{{ 'MOVEMENTS.DATE_LABEL' | t }}</label><input class="glass-input" type="date" [(ngModel)]="txForm.date"></div>
+    <div class="error-msg" *ngIf="txError()">{{ txError() }}</div>
+    <div class="modal-actions">
+      <button class="glass-btn" (click)="showAddModal.set(false)">{{ 'COMMON.CANCEL' | t }}</button>
+      <button class="btn-primary" (click)="saveTx()" [disabled]="savingTx()">
+        <i data-lucide="save" class="icon-sm"></i> {{ getSaveTxLabel() }}
+      </button>
+    </div>
+  </div>
+</div>

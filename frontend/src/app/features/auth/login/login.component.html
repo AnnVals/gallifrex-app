@@ -1,0 +1,58 @@
+<div class="auth-wrap">
+  <div class="bg-orbs">
+    <div class="orb orb1"></div>
+    <div class="orb orb2"></div>
+  </div>
+
+  <div class="lang-corner" (click)="$event.stopPropagation()">
+    <button class="lang-trigger glass-btn" (click)="toggleLangMenu()">
+      <span>{{ translation.currentLang().flag }}</span>
+      <span>{{ translation.currentLang().label }}</span>
+      <i data-lucide="chevron-down" class="icon-xs"></i>
+    </button>
+    <div class="lang-dropdown" *ngIf="langMenuOpen()">
+      <button
+        *ngFor="let lang of translation.langs"
+        class="lang-option"
+        [class.active]="translation.current() === lang.code"
+        (click)="changeLang(lang.code)"
+      >
+        {{ lang.flag }} {{ lang.label }}
+      </button>
+    </div>
+  </div>
+
+  <div class="auth-card glass-card">
+    <div class="auth-brand">
+      <img src="assets/gallifrex-logo.png" alt="Gallifrex" class="auth-logo" />
+      <div class="auth-brand-text">
+        <span class="brand-name">Gallifrex</span>
+        <span class="brand-ver">2.0</span>
+      </div>
+    </div>
+
+    <h2>{{ 'AUTH.WELCOME_BACK' | t }}</h2>
+    <p class="sub">{{ 'AUTH.SIGN_IN_SUB' | t }}</p>
+
+    <div class="field">
+      <label><i data-lucide="mail" class="icon-sm"></i> {{ 'AUTH.EMAIL' | t }}</label>
+      <input class="glass-input" type="email" [(ngModel)]="form.email" placeholder="tu@email.com" (keyup.enter)="login()">
+    </div>
+
+    <div class="field">
+      <label><i data-lucide="lock" class="icon-sm"></i> {{ 'AUTH.PASSWORD' | t }}</label>
+      <input class="glass-input" type="password" [(ngModel)]="form.password" placeholder="••••••••" (keyup.enter)="login()">
+    </div>
+
+    <div class="error-msg" *ngIf="error">
+      <i data-lucide="alert-circle" class="icon-sm"></i> {{ error }}
+    </div>
+
+    <button class="btn-primary full" (click)="login()" [disabled]="loading">
+      <i data-lucide="log-in" class="icon-sm"></i>
+      {{ (loading ? 'AUTH.SIGNING_IN' : 'AUTH.SIGN_IN') | t }}
+    </button>
+
+    <p class="auth-link">{{ 'AUTH.NO_ACCOUNT' | t }} <a routerLink="/register">{{ 'AUTH.REGISTER_LINK' | t }}</a></p>
+  </div>
+</div>
