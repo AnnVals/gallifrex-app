@@ -9,7 +9,7 @@ Tema glassmorphism warm-cream, modo oscuro/claro, iconos Lucide, gráficas Chart
 ## 🗂️ Estructura del proyecto
 
 ```
-finance-app/
+gallifrex/
 │
 ├── backend/
 │   ├── src/
