@@ -9,7 +9,7 @@ Tema glassmorphism warm-cream, modo oscuro/claro, iconos Lucide, gráficas Chart
 ## 🗂️ Estructura del proyecto
 
 ```
-finance-app/
+gallifrex/
 │
 ├── backend/
 │   ├── src/
@@ -85,7 +85,7 @@ finance-app/
 
 ### 1. PostgreSQL
 ```sql
-CREATE DATABASE financedb;
+CREATE DATABASE gallifrex;
 ```
 
 ### 2. Backend
@@ -101,7 +101,7 @@ npm run dev                  # http://localhost:3000
 ```env
 DB_HOST=localhost
 DB_PORT=5432
-DB_NAME=financedb
+DB_NAME=gallifrex
 DB_USER=postgres
 DB_PASSWORD=tu_password
 JWT_SECRET=una_clave_secreta_larga
