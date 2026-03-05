@@ -1,4 +1,4 @@
 export const environment = {
   production: true,
-  apiUrl: 'https://gallifrex-api.onrender.com'
+  apiUrl: 'https://gallifrex-api.onrender.com/api'
 };
