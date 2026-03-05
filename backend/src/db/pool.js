@@ -6,8 +6,11 @@ const pool = new Pool({
   database: process.env.DB_NAME,
   user:     process.env.DB_USER,
   password: process.env.DB_PASSWORD,
+  ssl:      process.env.DB_SSL === 'true' ? { rejectUnauthorized: false } : false,
 });
 
-pool.on('error', (err) => console.error('Pool error:', err));
+pool.on('error', function(err) {
+  console.error('Pool error:', err);
+});
 
 module.exports = pool;
