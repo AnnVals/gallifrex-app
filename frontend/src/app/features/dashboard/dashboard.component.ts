@@ -130,6 +130,14 @@ export class DashboardComponent implements OnInit {
         if (this.chartType() === 'donut') { this.buildDonutChart(); } else { this.buildBarChart(); }
       }, 50);
     });
+
+    effect(() => {
+      this.currencyService.current();
+      setTimeout(() => {
+        this.buildLineChart();
+        if (this.chartType() === 'donut') { this.buildDonutChart(); } else { this.buildBarChart(); }
+      }, 50);
+    });
   }
 
   ngOnInit(): void {
@@ -327,7 +335,7 @@ export class DashboardComponent implements OnInit {
             callbacks: {
               label: (item: any) => {
                 if (item.parsed.y > 0) {
-                  return item.dataset.label + ': ' + item.parsed.y.toLocaleString('es-ES') + ' EUR';
+                  return item.dataset.label + ': ' + this.currencyService.format(item.parsed.y);
                 }
                 return '';
               },
@@ -400,7 +408,7 @@ export class DashboardComponent implements OnInit {
             padding:         12,
             cornerRadius:    10,
             callbacks: {
-              label: (ctx: any) => (+ctx.parsed).toLocaleString('es-ES') + ' EUR',
+              label: (ctx: any) => this.currencyService.format(+ctx.parsed),
             },
           },
         },
@@ -435,7 +443,14 @@ export class DashboardComponent implements OnInit {
       },
       options: {
         responsive: true,
-        plugins: { legend: { display: false } },
+        plugins: {
+          legend: { display: false },
+          tooltip: {
+            callbacks: {
+              label: (ctx: any) => this.currencyService.format(+ctx.parsed.y),
+            },
+          },
+        },
         scales: {
           x: {
             ticks: { color: colors.ticks, font: { size: 11 } },
