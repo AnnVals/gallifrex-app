@@ -2,6 +2,15 @@
   padding: 30px;
 }
 
+.page-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-bottom: 20px;
+}
+
 .header-right {
   display: flex;
   gap: 10px;
@@ -302,13 +311,95 @@
   .page {
     padding: 16px;
   }
-  .filter-bar {
+
+  .page-header {
     flex-direction: column;
+    align-items: flex-start;
+
+    .header-right {
+      width: 100%;
+
+      .glass-btn,
+      .btn-primary {
+        flex: 1;
+        justify-content: center;
+        text-align: center;
+      }
+    }
   }
+
+  .filter-bar {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+    padding: 14px;
+
+    .filter-group:first-child {
+      grid-column: 1 / -1;
+    }
+
+    .glass-btn {
+      grid-column: 1 / -1;
+    }
+  }
+
+  .table-card {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .table {
+    min-width: 520px;
+
+    th, td {
+      padding: 10px 10px;
+      font-size: 12px;
+    }
+  }
+
+  .ellipsis {
+    max-width: 100px;
+  }
+
   .form-grid {
     grid-template-columns: 1fr;
   }
+
   .summary-row {
     grid-template-columns: 1fr;
+  }
+
+  .summary-card {
+    padding: 14px 16px;
+  }
+
+  :host ::ng-deep .modal-box {
+    width: 100% !important;
+    max-width: 100% !important;
+    margin: 0 !important;
+    border-radius: 20px 20px 0 0 !important;
+    position: fixed !important;
+    bottom: 0 !important;
+    left: 0 !important;
+    max-height: 90vh;
+    overflow-y: auto;
+  }
+
+  :host ::ng-deep .modal-overlay {
+    align-items: flex-end !important;
+  }
+}
+
+@media (max-width: 400px) {
+  .filter-bar {
+    grid-template-columns: 1fr;
+
+    .filter-group:first-child {
+      grid-column: 1;
+    }
+
+    .glass-btn {
+      grid-column: 1;
+    }
   }
 }
