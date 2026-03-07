@@ -50,6 +50,10 @@ export class DashboardComponent implements OnInit {
   private donutChart?: Chart;
   private barChart?:   Chart;
 
+  get currencySymbol(): string {
+    return this.currencyService.current().symbol;
+  }
+
   kpis = computed(() => {
     const d    = this.data();
     const lang = this.translation.current();
@@ -113,7 +117,7 @@ export class DashboardComponent implements OnInit {
     private dashboardService: DashboardService,
     private expenseService:   ExpenseService,
     private categoryService:  CategoryService,
-    private currencyService:  CurrencyService,
+    public  currencyService:  CurrencyService,
   ) {
     effect(() => {
       this.themeSvc.theme();
@@ -222,7 +226,11 @@ export class DashboardComponent implements OnInit {
 
     this.savingTx.set(true);
 
-    const payload = { ...this.txForm, amount: parseFloat(this.txForm.amount) };
+    const payload = {
+      ...this.txForm,
+      // ✅ Convierte el importe introducido a EUR antes de guardar en la DB
+      amount: this.currencyService.convertToEur(parseFloat(this.txForm.amount)),
+    };
 
     this.expenseService.create(payload).subscribe({
       next: () => {

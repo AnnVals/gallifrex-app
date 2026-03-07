@@ -69,11 +69,16 @@ export class ExpensesComponent implements OnInit {
 
   totalPages = computed(() => Math.ceil(this.total() / this.pageSize));
 
+  // ✅ Símbolo de moneda actual para mostrar en el formulario
+  get currencySymbol(): string {
+    return this.currencyService.current().symbol;
+  }
+
   constructor(
     private expenseService:  ExpenseService,
     private categoryService: CategoryService,
     private translation:     TranslationService,
-    private currencyService: CurrencyService,
+    public  currencyService: CurrencyService,
   ) {}
 
   ngOnInit(): void {
@@ -140,7 +145,7 @@ export class ExpensesComponent implements OnInit {
       this.editingId.set(expense.id!);
       this.form = {
         type:        expense.type,
-        amount:      expense.amount,
+        amount:      this.currencyService.convert(+expense.amount),
         date:        formattedDate,
         description: expense.description || '',
         category_id: expense.category_id || null,
@@ -185,7 +190,8 @@ export class ExpensesComponent implements OnInit {
 
     const payload = {
       type:        this.form.type,
-      amount:      parseFloat(this.form.amount),
+      // ✅ Convierte el importe introducido a EUR antes de guardar en la DB
+      amount:      this.currencyService.convertToEur(parseFloat(this.form.amount)),
       date:        this.form.date,
       description: this.form.description || '',
       category_id: this.form.category_id || null,
