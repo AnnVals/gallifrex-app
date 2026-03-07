@@ -136,8 +136,8 @@
     </div>
 
     <div class="field" style="margin-top:16px">
-      <label>{{ 'BUDGETS.AMOUNT_LABEL' | t }}</label>
-      <input class="glass-input" type="number" [(ngModel)]="form.amount" min="0" step="10" placeholder="500">
+      <label>{{ 'BUDGETS.AMOUNT_LABEL' | t }} ({{ currencySymbol }})</label>
+      <input class="glass-input" type="number" [(ngModel)]="form.amount" min="0" step="10" [placeholder]="'500 ' + currencySymbol">
     </div>
 
     <div class="error-msg" *ngIf="formError()">{{ formError() }}</div>

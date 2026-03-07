@@ -55,6 +55,10 @@ export class BudgetsComponent implements OnInit {
     return (this.totalSpent() / this.totalBudget()) * 100;
   });
 
+  get currencySymbol(): string {
+    return this.currencyService.symbol;
+  }
+
   constructor(
     private budgetService:   BudgetService,
     private categoryService: CategoryService,
@@ -79,7 +83,11 @@ export class BudgetsComponent implements OnInit {
     this.formError.set('');
     if (budget) {
       this.editingId.set(budget.id!);
-      this.form = { ...budget };
+      this.form = {
+        ...budget,
+        // Mostrar el importe convertido a la moneda actual para editar
+        amount: this.currencyService.convert(+budget.amount),
+      };
     } else {
       this.editingId.set(null);
       this.form = { amount: 0, category_id: undefined };
@@ -104,7 +112,13 @@ export class BudgetsComponent implements OnInit {
     this.saving.set(true);
     this.formError.set('');
 
-    const payload = { ...this.form, month: this.selectedMonth, year: this.selectedYear };
+    const payload = {
+      ...this.form,
+      // Convertir de vuelta a EUR antes de guardar en la BD
+      amount: this.currencyService.convertToEur(parseFloat(String(this.form.amount))),
+      month: this.selectedMonth,
+      year:  this.selectedYear,
+    };
 
     this.budgetService.upsert(payload).subscribe({
       next: () => {
